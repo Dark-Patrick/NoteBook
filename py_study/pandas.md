@@ -79,7 +79,7 @@ temp_dict = pd.DataFrame(temp_dict)
 - df["index"].unique(): 返回一个列表 
 - df["index"].str.split(",").tolist(): 
 
-![](./assets/2023-08-24 182933-1693314379021-3.png)
+![](./assets/2023-08-24%20182933.png)
 
 
 
