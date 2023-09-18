@@ -201,9 +201,66 @@ sns.heatmap(data[columns].corr(),annot=True,cmap='RdYlGn', ax=ax);
 
 ### 数据清理
 
+数据错误类型：异常值，规则冲突，格式错误
+
+```python
+data["Type"].value_counts()[0:20]
+```
+
+基于规则的检测(Rule-based Detection)
+
+基于模式的检测(Pattern-based Detection)
+
 ### 数据变换
 
+|        Normalization for Real Value Columns        |                                               |
+| :------------------------------------------------: | --------------------------------------------- |
+|               Min-max normalization                | $x'_i = \frac{x_i-min_x}{max_x-min_x}(b-a)+a$ |
+| Z-score normalization:0 mean, 1 standard deviation | $x'_i=\frac{x_i-mean(x)}{std(x)}$             |
+|                  Decimal scaling                   | $x'_i=x_i/10^j$ smallest j s.t. max(\|x\|)<1  |
+|                    Log scaling                     | $x'_i=log(x_i)$                               |
+
+
+
+Image Transformations
+
+下采样和裁剪，图片白化
+
+Text Transformations
+
+词根化、语法化
+
 ### 特征工程
+
+**Tabular Data Features**
+
+- int/float:直接使用或者分成n个bin
+- Catagorical data: ont-hot encoding
+- Date-time: 一个特征列表
+  - eg:[year, month, day, day_of_year, week_of_year, day_of_week]
+- Feature combination: 将不同的特征组合起来
+  - [cat, dog] * [male, female] -> [(cat, male), (cat, female), (dog, male), (dog, female)]
+
+**Text Features**
+
+- Represent text as token features
+  - Bag of words(BoW) model
+  - Word Embeddings(eg:Word2vec)
+
+- Pre-trained language models(eg: BERT, GPT-3)
+
+**Image/Video Features**
+
+- hand-craft
+- pre-trained deep neural networks
+
+
+
+
+
+## 机器学习模型
+
+
 
 
 
