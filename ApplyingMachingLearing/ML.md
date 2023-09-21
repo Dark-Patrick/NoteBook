@@ -256,11 +256,135 @@ Text Transformations
 
 
 
-
-
 ## 机器学习模型
 
+决策树模型
 
+- 随机森林
+- Gradient Boosting Decision Trees
+
+线性模型
+
+
+
+## 模型评估 
+
+- Accuracy
+
+```python
+sum(y == y_hat) / y.size
+```
+
+- Precision（精度）
+
+```python
+sum((y_hat == 1) & (y == 1)) / sum(y_hat == 1)
+```
+
+- Recall（召回）
+
+```python
+sum((y_hat == 1) & (y == 1)) / sum(y == 1)
+```
+
+- F1:Balnce precision and recall
+
+- AUC&ROC(常用于二分类问题)
+
+  ![](./assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-09-20%20213259.png)
+
+### 过拟合、欠拟合
+
+数据和模型的复杂度要匹配
+
+
+
+## 集成学习
+
+###  方差&偏差
+
+$$
+E[f] = f\ \   E[ε] = 0\ \ Var[ε] = σ^2\\
+
+ε\ is\ independent\ of\  \hat{f}\\
+
+
+E_D[(y - \hat{y}(x))^2] =E[((f-E[\hat{f}])+ε-(\hat{f}-E[\hat{f}]))^2]\\
+					    =(f-E[\hat{f}])^2+E[ε^2]+E[(\hat{f}-E[\hat{f}])^2]\\
+					    =Bias[\hat{f}]^2+Var[\hat{f}]+σ^2
+$$
+
+- 减少偏差
+  - 使用更复杂的模型
+  - Boosting
+  - Stacking
+- 减少方差
+  - 使用更简单的模型
+  - Regularization添加正则项
+  - Bagging
+  - Stacking
+- 减少$σ^2$
+  - 提升数据质量
+
+==Ensemble learning：集成学习，通过用多个模型提升预测的性能==
+
+
+
+### bagging
+
+==Bootstrap AGGregatING==: train multiple learner on data by bootstrap sampling
+
+```python
+'''Bagging Code'''
+class Bagging: 
+ def __init__(self, base_learner, n_learners):
+ 	self.learners = [clone(base_learner) for _ in range(n_learners)]# 复制多个learner，并保存起来
+    
+ def fit(self, X, y):
+ 	for learner in self.learners: 
+ 		examples = np.random.choice( # 有放回的抽取
+ 			np.arange(len(X)), int(len(X)), replace=True)
+ 	learner.fit(X.iloc[examples, :], y.iloc[examples])
+    
+ def predict(self, X):
+ 	preds = [learner.predict(X) for learner in self.learners] 
+ 	return np.array(preds).mean(axis=0) # 对每一个learner取平均
+
+```
+
+**Bagging reduces more variance when base learners are unstable**
+
+
+
+### Boosting
+
+Combines weak learners into a strong one, primarily to reduce bias
+
+```python
+'''Gradient Boosting Code'''
+class GradientBoosting: 
+ def __init__(self, base_learner, n_learners, learning_rate):
+ 	self.learners = [clone(base_learner) for _ in range(n_learners)]
+ 	self.lr = learning_rate
+    
+ def fit(self, X, y):
+ 	residual = y.copy()# 残差初始为y本身
+ 	for learner in self.learners:
+ 		learner.fit(X, residual)
+ 		residual -= self.lr * learner.predict(X) 
+    
+ def predict(self,X):
+ 	preds = [learner.predict(X) for learner in self.learners]
+ 	return np.array(preds).sum(axis=0) * self.lr
+```
+
+==XGBoost== ==lightBoost==
+
+
+
+### Stacking
+
+Combine multiple base learners to reduce variance
 
 
 
