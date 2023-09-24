@@ -386,5 +386,200 @@ class GradientBoosting:
 
 Combine multiple base learners to reduce variance
 
+![](./assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-09-23%20104602.png)
 
+Multi-layer Stacking
+
+![](./assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-09-23%20105021.png)
+
+Overfitting in Multi-layer Stacking
+
+- 不同的层用不同的训练数据以避免过拟合
+- 重复的k折交叉验证
+
+
+
+## 模型调参
+
+tensorboard、weights&bias
+
+自动模型调参：autoML
+
+- Hyperparameter optimization(HPO)
+- Neural architecture search(NAS)
+
+### 超参数优化(HPO)
+
+<img src="./assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-09-23%20220833.png" style="zoom:80%;" />
+
+**HPO常用算法**
+
+- Black-box
+- Multi-fidelity: modifies the training job to speed up the search
+  - Train on subsampled datasets
+  - Reduce model size(e.g. less layers, channels)
+  - Stop bad configuration earlier
+
+<img src="./assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-09-23%20221507.png" style="zoom:80%;" />
+
+**简单介绍**
+
+- Grid search
+
+```python
+for config in search_space:
+    train_and_eval(config)
+return best_result
+```
+
+- Random search
+
+```python
+for _ in range(n):
+    config = random_select(search_space)
+    train_and_eval(config)
+return best_result
+```
+
+- Bayesian Optimization(BO)
+  - 学习超参数到精度的评估指标中间的一个函数
+  - Surrogate model(调参模型)
+  - Acquisition function(采样模型)
+  - Limitation of BO
+
+![](./assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-09-23%20222712.png)
+
+- Successive Halving
+  1. 随机抽取n个超参数训练m轮
+  2. 保留最好的n / 2个超参数训练m轮
+  3. 保留最好的n / 4个超参数训练2m轮
+  4. ...
+- Hyperband: 跑多次SH，选取不同的n、m
+
+### 网络架构搜索(NAS)
+
+搜索空间->怎么在搜索空间搜索->衡量神经网络架构的好坏
+
+NAS训练方法
+
+- 强化学习
+
+- One-shot
+- Scaling CNNs: Compound depth, width, resolution scaling
+
+
+
+## 深度学习网络架构
+
+### 批量和层的归一化
+
+**Batch Norm**
+
+对于具有多层的深度学习网络，把中间的一些层也做标准化，使得函数更加平滑
+
+<img src="./assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-09-24%20101137.png" style="zoom:80%;" />
+
+```python
+'''Batch Normalization Code'''
+def batch_norm(X, gamma, beta, moving_mean, moving_var, eps, momentum):
+	if not torch.is_grad_enabled(): # In prediction mode 
+		X_hat = (X - moving_mean) / torch.sqrt(moving_var + eps) # 使用训练时存下的全局均值和方差 
+	else: 
+		assert len(X.shape) in (2, 4) 
+		if len(X.shape) == 2: 
+			mean = X.mean(dim=0) 
+			var = ((X - mean)**2).mean(dim=0) 
+		else: 
+			mean = X.mean(dim=(0, 2, 3), keepdim=True) 
+			var = ((X - mean)**2).mean(dim=(0, 2, 3), keepdim=True) 
+		X_hat = (X - mean) / torch.sqrt(var + eps) 
+		moving_mean = momentum * moving_mean + (1.0 - momentum) * mean
+		moving_var = momentum * moving_var + (1.0 - momentum) * var
+    Y = gamma * X_hat + beta 
+return Y, moving_mean, moving_var
+
+```
+
+[Full code of Batch Normalization](http://d2l.ai/chapter_convolutional-modern/batch-norm.html)
+
+
+
+**Layer Norm**
+
+主要用于循环神经网络
+
+<img src="./assets/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202023-09-24%20105308.png" style="zoom:80%;" />
+
+Batch Norm是按列(特征)求平均，即将通道中的数据求均值与方差(CNN)
+
+Layer Norm是按行(样本)求平均，将样本的所有特征和时间步骤变成一个向量，求均值与方差(RNN)
+
+
+
+**More Norm**
+
+- Modify reshape:
+
+  - InstanceNorm:n * c * w * h -> wh * cn
+
+  - GroupNorm: n * c * w * h -> swh * gn with c = sg
+
+  - CrossNorm: swap mean/std between a pair of features
+
+- Modify normalize: whitening
+
+- Modify recovery: replace γ，β with a dense layer
+
+- Apply to weights or gradients
+
+==梯度裁剪==
+
+
+
+### 迁移学习
+
+看Dive into AI
+
+哪里寻找预训练模型
+
+- [Tensorflow Hub](https://tfhub.dev)
+
+- [TIMM](https://github.com/rwightman/pytorch-image-models)
+
+```python
+import timm
+from torch import nn
+
+model = timm.create_model("resnet18", pretrained=True)
+model.fc = nn.Linear(model.fc.in_features, n_classes)
+# Train model as a normal training job
+```
+
+
+
+**微调用于nlp**
+
+自监督的预训练
+
+预训练模型
+
+- Word embeddings
+- Transformer based pre-trained models
+  - BERT: a transformer **encoder**
+  - GPT: a transformer **decoder**
+  - T5: a transformer **encoder-decoder**
+
+哪里去找预训练模型
+
+- HuggingFace
+
+```python
+from transformers import AutoTokenizer
+from transformers import AutoModelForSequenceClassification
+tokenizer = AutoTokenizer.from_pretrained("bert-base-cased") 
+inputs = tokenizer(sentences, padding="max_length", truncation=True) 
+model = AutoModelForSequenceClassification.from_pretrained(
+	“bert-base-cased", num_labels=2) 
+# Train model on inputs as a normal training job
+```
 
